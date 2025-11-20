@@ -39,9 +39,14 @@ exports.getUser = (req, res) => {
 exports.createUser = async (req, res) => {
     const query = 'INSERT INTO users (user_name, display_name, password_hash, icon_url) VALUES(?, ?, ?, ?);';
     
-    const params = [req.body.user_name, req.body.display_name, hashedPassword, req.body.icon_url];
-    
     bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({
+                error: message.ERRORS.AUTH.INVALID_CREDENTIALS
+            })
+        }
+        const params = [req.body.user_name, req.body.display_name, hashedPassword, req.body.icon_url];
         connection.query(query, params, (err, results) => {
             if (err) {
                 console.error(err);
