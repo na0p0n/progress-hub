@@ -7,6 +7,9 @@ module.exports = {
         },
     },
     ERRORS: {
+        ERROR: {
+            REQUEST_ERROR: 'リクエストの処理中にエラーが発生しました。'
+        },
         USER_DB: {
             USER_NOT_FOUND: '指定されたユーザーが見つかりません。',
             QUERY_ERROR: '処理の実行中にエラーが発生しました。',
