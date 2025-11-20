@@ -36,7 +36,7 @@ exports.getUser = (req, res) => {
     });
 };
 
-exports.createUser = async (req, res) => {
+exports.createUser = (req, res) => {
     const query = 'INSERT INTO users (user_name, display_name, password_hash, icon_url) VALUES(?, ?, ?, ?);';
     
     bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
@@ -105,15 +105,14 @@ exports.updateUser = (req, res) => {
 // ユーザー削除API
 // URL: DELETE (/api/users/:id)
 // パスワードを検証し、あっていれば削除を実行
-exports.deleteUser = async (req, res) => {
+exports.deleteUser = (req, res) => {
     const userId = req.params.id;
     const deleteQuery = 'UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?;';
 
     fetchPasswordHash(userId, req.body.password, (err, match) => {
-        if (err) {
-            c           
-            return res.status(401).json({
-                error: message.ERRORS.AUTH.INVALID_CREDENTIALS
+        if (err) {         
+            return res.status(500).json({
+                error: message.ERRORS.USER_DB.QUERY_ERROR
             })
         }
         if (match) {
@@ -142,7 +141,7 @@ exports.deleteUser = async (req, res) => {
 };
 
 // パスワード検証メソッド
-async function fetchPasswordHash(id, password, callback){
+function fetchPasswordHash(id, password, callback){
     const query = 'SELECT password_hash FROM users WHERE id = ?;';
     connection.query(query, [id], (err, results) => {
         if (err) {
@@ -155,7 +154,7 @@ async function fetchPasswordHash(id, password, callback){
         }
 
         const hashedPassword = results[0].password_hash;
-        bcrypt.compare(password, haかshedPassword, (err, match) => {
+        bcrypt.compare(password, hashedPassword, (err, match) => {
             if (err) {
                 return callback(err, null);
             }
