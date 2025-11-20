@@ -13,7 +13,7 @@ router.get('/', userController.getAllUsers);
 
 // 指定ユーザー取得API
 // URL: GET (/api/users/:id)
-router.get('/:id', userContoroller.getUser);
+router.get('/:id', userController.getUser);
 
 // ユーザー情報変更API
 // URL: PATCH (/api/users/:id)

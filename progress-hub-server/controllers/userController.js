@@ -5,7 +5,7 @@ const message = require('../config/message');
 const ALLOWED_FIELDS = ['user_name', 'display_name', 'icon_url'];
 
 exports.getAllUsers = (req, res) => {
-    const query = 'SELECT * FROM users;';
+    const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at, deleted_at FROM users;';
     connection.query(query, (err, results) => {
         if (err) {
             console.error(err);
@@ -18,7 +18,7 @@ exports.getAllUsers = (req, res) => {
 };
 
 exports.getUser = (req, res) => {
-    const query = 'SELECT * FROM users WHERE id = ?;';
+    const query = 'SELECT user_name, display_name, icon_url, created_at, updated_at FROM users WHERE id = ?;';
     const user_id = [ req.params.id ];
     connection.query(query, user_id, (err, results) => {
         if (err) {
@@ -27,7 +27,12 @@ exports.getUser = (req, res) => {
                 error: message.ERRORS.USER_DB.QUERY_ERROR
             });
         }
-        res.json(results);
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                error: message.ERRORS.USER_DB.USER_NOT_FOUND
+            });
+        }
+        res.json(results[0]);
     });
 };
 
@@ -39,11 +44,11 @@ exports.createUser = async (req, res) => {
     connection.query(query, params, (err, results) => {
         if (err) {
             console.error(err);
-            return res.status(500).json({ error: 'Database Error'});
+            return res.status(500).json({ error: message.ERRORS.USER_DB.QUERY_ERROR });
         }
         res.status(201).json({
-            message: message.SUCCESS.USER_DB.QUERY_SUCCESS,
-            userId: results.userId
+            message: message.SUCCESS.USER_DB.USER_CREATE_SUCCESS,
+            userId: results.id
         })
     });
 };
@@ -85,7 +90,7 @@ exports.updateUser = (req, res) => {
             })
         }
         res.status(200).json({
-            message: message.SUCCESS.USER_DB.QUERY_SUCCESS
+            message: message.SUCCESS.USER_DB.USER_UPDATE_SUCCESS
         });
     });
 }
@@ -95,40 +100,47 @@ exports.updateUser = (req, res) => {
 // パスワードを検証し、あっていれば削除を実行
 exports.deleteUser = async (req, res) => {
     const userId = req.params.id;
-    const isPasswordMatched = await fetchPasswordHash(userId, req.body.password);
-    if (!isPasswordMatched) {
-        return res.status(401).json({
-            error: message.ERRORS.AUTH.INVALID_CREDENTIALS
-        });
-    }
-
     const deleteQuery = 'UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?;';
-    const deleteResult = await connection.query(deleteQuery, [userId]);
 
-    if (deleteResult.affectedRows === 0) {
-        return res.status(404).json({
-            error: message.ERRORS.USER_DB.USER_NOT_FOUND
-        });
-    }
-    return res.status(200).json({
-        message: message.SUCCESS.USER_DB.USER_DELETE_SUCCESS
+    fetchPasswordHash(userId, req.body.password, (err, match) => {
+        if (match) {
+            connection.query(deleteQuery, [userId], (err, results) => {
+                if (results.affectedRows === 0) {
+                    return res.status(404).json({
+                        error: message.ERRORS.USER_DB.USER_NOT_FOUND
+                    });
+                }
+                return res.status(200).json({
+                    message: message.SUCCESS.USER_DB.USER_DELETE_SUCCESS
+                });
+            })
+        } else {
+            return res.status(401).json({
+                error: message.ERRORS.AUTH.INVALID_CREDENTIALS
+            });
+        }
     })
 };
 
 // パスワード検証メソッド
-async function fetchPasswordHash(id, password){
+async function fetchPasswordHash(id, password, callback){
     const query = 'SELECT password_hash FROM users WHERE id = ?;';
-    try {
-        const results = await connection.query(query, [id]);
+    connection.query(query, [id], (err, results) => {
+        if (err) {
+            console.err("DBエラー:", err);
+            return callback(err, null);
+        }
 
         if (results.length === 0) {
-            return null;
+            return callback(null, false);
         }
-        const hashedPassword = results[0][0].password_hash;
-        const match = await bcrypt.compare(password, hashedPassword);
 
-        return match;
-    } catch (err) {
-        console.error("DBエラー:", err);
-    }
+        const hashedPassword = results[0].password_hash;
+        bcrypt.compare(password, hashedPassword, (err, match) => {
+            if (err) {
+                return callback(err, null);
+            }
+            return callback(null, match);
+        });
+    });
 };
