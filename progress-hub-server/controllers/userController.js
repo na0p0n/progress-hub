@@ -38,18 +38,20 @@ exports.getUser = (req, res) => {
 
 exports.createUser = async (req, res) => {
     const query = 'INSERT INTO users (user_name, display_name, password_hash, icon_url) VALUES(?, ?, ?, ?);';
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
     
     const params = [req.body.user_name, req.body.display_name, hashedPassword, req.body.icon_url];
-    connection.query(query, params, (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: message.ERRORS.USER_DB.QUERY_ERROR });
-        }
-        res.status(201).json({
-            message: message.SUCCESS.USER_DB.USER_CREATE_SUCCESS,
-            userId: results.insertId
-        })
+    
+    bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
+        connection.query(query, params, (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: message.ERRORS.USER_DB.QUERY_ERROR });
+            }
+            res.status(201).json({
+                message: message.SUCCESS.USER_DB.USER_CREATE_SUCCESS,
+                userId: results.insertId
+            })
+        });
     });
 };
 
