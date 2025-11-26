@@ -2,8 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const connection = require('../config/db');
 const message = require('../config/message');
+const util = require('util');
 const ALLOWED_FIELDS = ['user_name', 'display_name', 'icon_url'];
 
+const queryPromise = util.promisify(connection.query).bind(connection);
 exports.getAllUsers = (req, res) => {
     const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at, deleted_at FROM users WHERE deleted_at IS NULL;';
     connection.query(query, (err, results) => {
@@ -44,28 +46,23 @@ exports.createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const params = [user_name, display_name, hashedPassword, icon_url];
 
-        connection.query(query, params, (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ error: message.ERRORS.USER_DB.QUERY_ERROR });
-            }
-            res.status(201).json({
-                message: message.SUCCESS.USER_DB.USER_CREATE_SUCCESS,
-                userId: results.insertId
-            });
+        const results = await queryPromise(query, params);
+        res.status(201).json({
+            message: message.SUCCESS.USER_DB.USER_CREATE_SUCCESS,
+            userId: results.insertId
         });
     } catch (err) {
         console.error(err);
         return res.status(500).json({
             error: message.ERRORS.ERROR.REQUEST_ERROR
-        })
+        });
     }
 };
 
 // ユーザー情報変更API
 // URL: PATCH (/api/users/:id)
 // req.bodyのキーと値を読み取り、指定のユーザー情報を変更する
-exports.updateUser = (req, res) => {
+exports.updateUser = async (req, res) => {
     const query = 'UPDATE users SET ? WHERE id = ?';
     const userId = req.params.id;
     const updates = req.body;
@@ -85,23 +82,23 @@ exports.updateUser = (req, res) => {
         });
     }
 
-    connection.query(query, [req.body, userId], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: message.ERRORS.USER_DB.QUERY_ERROR
-            });
-        }
+    try {
+        const results = await queryPromise(query, [req.body, userId]);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({
                 error: message.ERRORS.USER_DB.USER_NOT_FOUND
-            })
+            });
         }
         res.status(200).json({
             message: message.SUCCESS.USER_DB.USER_UPDATE_SUCCESS
-        });
-    });
+        })
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: message.ERRORS.ERROR.REQUEST_ERROR
+        });        
+    }
 }
 
 // ユーザー削除API
@@ -121,23 +118,16 @@ exports.deleteUser = async (req, res) => {
             });
         }
 
-        connection.query(deleteQuery, [userId], (err, results) => {
-            if (err) {
-                console.error(err);
-                res.status(500).json({
-                    error: message.ERRORS.USER_DB.QUERY_ERROR
-                });
-            }
+        const results = await queryPromise(deleteQuery, [userId]);
 
-            if (results.affectedRows === 0) {
-                return res.status(404).json({
-                    error: message.ERRORS.USER_DB.USER_NOT_FOUND
-                });
-            }
-
-            return res.status(200).json({
-                message: message.SUCCESS.USER_DB.USER_DELETE_SUCCESS
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                error: message.ERRORS.USER_DB.USER_NOT_FOUND
             });
+        }
+
+        return res.status(200).json({
+            message: message.SUCCESS.USER_DB.USER_DELETE_SUCCESS
         });
     } catch (err) {
         console.error(err);
@@ -148,26 +138,20 @@ exports.deleteUser = async (req, res) => {
 };
 
 // パスワード検証メソッド
-function fetchPasswordHash(id, password) {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT password_hash FROM users WHERE id = ?;`;
-        connection.query(query, [id], (err, results) => {
-            if (err) {
-                console.error('DBエラー:', err);
-                return reject(err);
-            }
+async function fetchPasswordHash(id, password) {
+    const query = `SELECT password_hash FROM users WHERE id = ?;`;
+    try {
+        const results = await queryPromise(query, [id]);
 
-            if (results.length === 0) {
-                return resolve(false);
-            }
+        if (results.length === 0) {
+            return false;
+        }
 
-            const hashedPassword = results[0].password_hash;
-            bcrypt.compare(password, hashedPassword, (err, match) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(match);
-            });
-        });
-    });
+        const hashedPassword = results[0].password_hash;
+        const match = await bcrypt.compare(password, hashedPassword);
+        return match;
+    } catch (err) {
+        console.error('DBエラー:', err);
+        throw err; // エラーを呼び出し元に伝播させる
+    }
 };
