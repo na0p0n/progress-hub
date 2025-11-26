@@ -130,7 +130,7 @@ exports.deleteUser = async (req, res) => {
             }
 
             if (results.affectedRows === 0) {
-                res.status(404).json({
+                return res.status(404).json({
                     error: message.ERRORS.USER_DB.USER_NOT_FOUND
                 });
             }
@@ -142,7 +142,7 @@ exports.deleteUser = async (req, res) => {
     } catch (err) {
         console.error(err);
         return res.status(500).json({
-            error: message.ERRORS.USER_DB.QUERY_ERROR
+            error: message.ERRORS.ERROR.REQUEST_ERROR
         });
     }
 };
