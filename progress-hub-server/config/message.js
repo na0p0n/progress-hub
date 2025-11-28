@@ -8,7 +8,8 @@ module.exports = {
     },
     ERRORS: {
         ERROR: {
-            REQUEST_ERROR: 'リクエストの処理中にエラーが発生しました。'
+            REQUEST_ERROR: 'リクエストの処理中にエラーが発生しました。',
+            FETCH_ERROR: 'リクエストの取得中にエラーが発生しました。',
         },
         USER_DB: {
             USER_NOT_FOUND: '指定されたユーザーが見つかりません。',

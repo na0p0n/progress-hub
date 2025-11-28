@@ -10,39 +10,39 @@ const queryPromise = util.promisify(connection.query).bind(connection);
 // 全ユーザー取得API
 // URL: GET (api/users/)
 // すべてのユーザーを取得する
-exports.getAllUsers = (req, res) => {
-    const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at, deleted_at FROM users WHERE deleted_at IS NULL;';
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: message.ERRORS.USER_DB.QUERY_ERROR
-            });
-        }
+exports.getAllUsers = async (req, res) => {
+    const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at FROM users WHERE deleted_at IS NULL;';
+    try {
+        const results = await queryPromise(query);
         res.json(results);
-    });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: message.ERRORS.ERROR.FETCH_ERROR
+        });
+    }
 };
 
 // ユーザー取得API
 // URL: GET (/api/users/:id)
 // 指定したidのユーザー情報を取得する
-exports.getUser = (req, res) => {
+exports.getUser = async (req, res) => {
     const query = 'SELECT user_name, display_name, icon_url, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL;';
     const user_id = [ req.params.id ];
-    connection.query(query, user_id, (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({
-                error: message.ERRORS.USER_DB.QUERY_ERROR
-            });
-        }
-        if (results.length === 0) {
+    try {
+        const results = await queryPromise(query, user_id);
+        if (results.length === 0) { 
             return res.status(404).json({
                 error: message.ERRORS.USER_DB.USER_NOT_FOUND
             });
         }
         res.json(results[0]);
-    });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: message.ERRORS.ERROR.FETCH_ERROR
+        });
+    }
 };
 
 // ユーザー作成API
@@ -122,7 +122,12 @@ exports.deleteUser = async (req, res) => {
     try {
         const isMatch = await fetchPasswordHash(userId, password);
 
-        if (!isMatch) { 
+        if (isMatch === null) {
+            return res.status(404).json({
+                error: message.ERRORS.USER_DB.USER_NOT_FOUND
+            })
+        }
+        if (isMatch === false) { 
             return res.status(401).json({
                 error: message.ERRORS.AUTH.INVALID_CREDENTIALS
             });
@@ -154,7 +159,7 @@ async function fetchPasswordHash(id, password) {
         const results = await queryPromise(query, [id]);
 
         if (results.length === 0) {
-            return false;
+            return null;
         }
 
         const hashedPassword = results[0].password_hash;
