@@ -8,12 +8,15 @@ const ALLOWED_FIELDS = ['user_name', 'display_name', 'icon_url'];
 const queryPromise = util.promisify(connection.query).bind(connection);
 
 // 全ユーザー取得API
-// URL: GET (api/users/)
+// URL: GET (api/users?limit=(limit)&page=(page))
 // すべてのユーザーを取得する
 exports.getAllUsers = async (req, res) => {
-    const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at FROM users WHERE deleted_at IS NULL;';
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit); // 1ページあたりの件数
+    const offset = (page - 1) * limit;
+    const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at FROM users WHERE deleted_at IS NULL LIMIT ? OFFSET ?;';
     try {
-        const results = await queryPromise(query);
+        const results = await queryPromise(query, [limit, offset]);
         res.json(results);
     } catch (err) {
         console.error(err);
@@ -65,7 +68,7 @@ exports.createUser = async (req, res) => {
         console.error(err);
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({
-                error: 'このユーザー名は既に使用されています。'
+                error: message.ERRORS.USER_DB.ENTRY_DUPLICATE
             });
         }
         return res.status(500).json({
@@ -93,7 +96,7 @@ exports.updateUser = async (req, res) => {
 
     if (!ALLOWED_FIELDS.includes(keyToUpdate)) {
         return res.status(400).json({
-            error: message.ERRORS.UPDATE_USER.FIELD_NOT_FOUND
+            error: message.ERRORS.UPDATE_USER.FIELD_NOT_ALLOWED
         });
     }
 
@@ -122,6 +125,11 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     const userId = req.params.id;
     const { password } = req.body;
+    if (!password) {
+        return res.status(400).json({
+            error: message.ERRORS.ERROR.PASSWORD_REQUIRED
+        })
+    }
     const deleteQuery = 'UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?;';
 
     try {
