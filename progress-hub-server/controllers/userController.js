@@ -63,6 +63,11 @@ exports.createUser = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                error: 'このユーザー名は既に使用されています。'
+            });
+        }
         return res.status(500).json({
             error: message.ERRORS.ERROR.REQUEST_ERROR
         });
@@ -93,7 +98,7 @@ exports.updateUser = async (req, res) => {
     }
 
     try {
-        const results = await queryPromise(query, [req.body, userId]);
+        const results = await queryPromise(query, [updates, userId]);
 
         if (results.affectedRows === 0) {
             return res.status(404).json({
@@ -134,12 +139,6 @@ exports.deleteUser = async (req, res) => {
         }
 
         const results = await queryPromise(deleteQuery, [userId]);
-
-        if (results.affectedRows === 0) {
-            return res.status(404).json({
-                error: message.ERRORS.USER_DB.USER_NOT_FOUND
-            });
-        }
 
         return res.status(200).json({
             message: message.SUCCESS.USER_DB.USER_DELETE_SUCCESS
