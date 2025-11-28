@@ -6,6 +6,10 @@ const util = require('util');
 const ALLOWED_FIELDS = ['user_name', 'display_name', 'icon_url'];
 
 const queryPromise = util.promisify(connection.query).bind(connection);
+
+// 全ユーザー取得API
+// URL: GET (api/users/)
+// すべてのユーザーを取得する
 exports.getAllUsers = (req, res) => {
     const query = 'SELECT id, user_name, display_name, icon_url, created_at, updated_at, deleted_at FROM users WHERE deleted_at IS NULL;';
     connection.query(query, (err, results) => {
@@ -19,6 +23,9 @@ exports.getAllUsers = (req, res) => {
     });
 };
 
+// ユーザー取得API
+// URL: GET (/api/users/:id)
+// 指定したidのユーザー情報を取得する
 exports.getUser = (req, res) => {
     const query = 'SELECT user_name, display_name, icon_url, created_at, updated_at FROM users WHERE id = ? AND deleted_at IS NULL;';
     const user_id = [ req.params.id ];
@@ -38,6 +45,9 @@ exports.getUser = (req, res) => {
     });
 };
 
+// ユーザー作成API
+// URL: POST (/api/users/)
+// 入力値をユーザーTBLに追加する
 exports.createUser = async (req, res) => {
     const { user_name, display_name, password, icon_url } = req.body; 
     const query = 'INSERT INTO users (user_name, display_name, password_hash, icon_url) VALUES(?, ?, ?, ?);';
