@@ -18,6 +18,13 @@ module.exports = {
         },
         AUTH: {
             INVALID_CREDENTIALS: '認証情報が無効です。'
+        },
+        TODO_DB: {
+            TODO_NOT_FOUND: '指定されたToDoが見つかりません。',
+        },
+        CREATE_TODO: {
+            INVALID_FIELD_COUNT: 'カラムの数が不正です。',
+            FIELD_NOT_ALLOWED: 'カラム名が不正です。',
         }
     }
 }
