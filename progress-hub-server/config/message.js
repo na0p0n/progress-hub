@@ -3,10 +3,16 @@ module.exports = {
         USER_DB: {
             USER_CREATE_SUCCESS: 'ユーザーを作成しました。',
             USER_UPDATE_SUCCESS: 'ユーザー情報を更新しました。',
-            USER_DELETE_SUCCESS: 'ユーザーを削除しました。'
+            USER_DELETE_SUCCESS: 'ユーザーを削除しました。',
+        },
+        TODO_DB: {
+            TODO_CREATE_SUCCESS: 'ToDoを作成しました。',
         },
     },
     ERRORS: {
+        ERROR: {
+            REQUEST_ERROR: 'リクエストの処理中にエラーが発生しました。',
+        },
         USER_DB: {
             USER_NOT_FOUND: '指定されたユーザーが見つかりません。',
             QUERY_ERROR: '処理の実行中にエラーが発生しました。',
@@ -17,7 +23,7 @@ module.exports = {
             FIELD_NOT_FOUND: 'その項目は存在しません。',
         },
         AUTH: {
-            INVALID_CREDENTIALS: '認証情報が無効です。'
+            INVALID_CREDENTIALS: '認証情報が無効です。',
         },
         TODO_DB: {
             TODO_NOT_FOUND: '指定されたToDoが見つかりません。',

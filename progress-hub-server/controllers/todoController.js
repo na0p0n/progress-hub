@@ -41,32 +41,36 @@ exports.createTodo = async (req, res) => {
     const user_id = req.body.user_id;
     const incomingKeys = Object.keys(req.body);
 
-    if (incomingKeys.length !== 8) {
-        return res.status(403).json({
-            error: message.ERRORS.CREATE_TODO.INVALID_FIELD_COUNT
-        })
-    }
-
     if (!lodash.isEqual(lodash.countBy(ALLOWED_FIELDS), lodash.countBy(incomingKeys))) {
-        return res.status(403).json({
+        return res.status(400).json({
             error: message.ERRORS.CREATE_TODO.FIELD_NOT_ALLOWED
         })
     }
 
+    const {
+        title,
+        detail,
+        deadline,
+        state,
+        important,
+        progress_rate,
+        category_id
+    } = req.body;
+
     const params = [
         user_id,
-        req.body.title,
-        req.body.detail,
-        req.body.deadline,
-        req.body.state,
-        req.body.important,
-        req.body.progress_rate,
-        req.body.category_id
+        title,
+        detail,
+        deadline,
+        state,
+        important,
+        progress_rate,
+        category_id
     ];
 
     try {
         if (!await fetchUser(user_id)) {
-            return res.status(401).json({
+            return res.status(400).json({
                 error: message.ERRORS.USER_DB.USER_NOT_FOUND
             })
         }
