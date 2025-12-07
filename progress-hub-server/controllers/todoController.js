@@ -1,6 +1,5 @@
 const express = require('express');
 const lodash = require('lodash');
-const bcrypt = require('bcryptjs');
 const connection = require('../config/db');
 const message = require('../config/message');
 const util = require('util');
@@ -39,14 +38,9 @@ exports.createTodo = async (req, res) => {
         );
     ```;
 
-    const user_id = req.body.userId;
+    const user_id = req.body.user_id;
     const incomingKeys = Object.keys(req.body);
 
-    if (!await fetchUser(user_id)) {
-        return res.status(401).json({
-            error: message.ERRORS.USER_DB.USER_NOT_FOUND
-        })
-    }
     if (incomingKeys.length !== 8) {
         return res.status(403).json({
             error: message.ERRORS.CREATE_TODO.INVALID_FIELD_COUNT
@@ -67,18 +61,25 @@ exports.createTodo = async (req, res) => {
         req.body.state,
         req.body.important,
         req.body.progress_rate,
-        req.body.category_id,
-        req.body.created_at
+        req.body.category_id
     ];
 
     try {
+        if (!await fetchUser(user_id)) {
+            return res.status(401).json({
+                error: message.ERRORS.USER_DB.USER_NOT_FOUND
+            })
+        }
+
         const results = await queryPromise(createQuery, params);
+        
         res.status(201).json({
             message: message.SUCCESS.TODO_DB.TODO_CREATE_SUCCESS,
             todoId: results.insertId
         });
     } catch (err) {
         console.error(err);
+
         return res.status(500).json({
             error: message.ERRORS.ERROR.REQUEST_ERROR
         });
@@ -93,15 +94,6 @@ exports.deleteTodo = async (req, res) => {
 
 async function fetchUser(user_id) {
     const fetchUserQuery = 'SELECT user_id FROM users WHERE user_id = ?;';
-
-    try {
-        const results = await queryPromise(fetchUserQuery, [ user_id ]);
-        if (results.length === 0) {
-            return false;
-        }
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    const results = await queryPromise(fetchUserQuery, [ user_id ]);
+    return results.length > 0;
 }
