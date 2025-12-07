@@ -20,7 +20,7 @@ exports.getTodoByUserId = async (req, res) => {
 };
 
 exports.createTodo = async (req, res) => {
-    const createQuery = ```
+    const createQuery = `
         INSERT INTO
             todos (
                 user_id,
@@ -36,7 +36,7 @@ exports.createTodo = async (req, res) => {
         VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, now()    
         );
-    ```;
+    `;
 
     const user_id = req.body.user_id;
     const incomingKeys = Object.keys(req.body);
