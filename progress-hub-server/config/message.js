@@ -32,6 +32,10 @@ module.exports = {
         CREATE_TODO: {
             INVALID_FIELD_COUNT: 'カラムの数が不正です。',
             FIELD_NOT_ALLOWED: 'カラム名が不正です。',
+        },
+        DELETE_TODO: {
+            INVALID_FIELD_COUNT: 'カラムの数が不正です。',
+            FIELD_NOT_ALLOWED: 'カラム名が不正です。',
         }
     }
 }
