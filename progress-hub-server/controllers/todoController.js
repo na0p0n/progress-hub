@@ -136,12 +136,6 @@ exports.deleteTodo = async (req, res) => {
     ];
 
     try {
-        if (!await fetchUser(user_id)) {
-            return res.status(400).json({
-                error: message.ERRORS.USER_DB.USER_NOT_FOUND
-            })
-        }
-
         const results = await queryPromise(deleteQuery, params);
         
         if (results.affectedRows === 0) {
