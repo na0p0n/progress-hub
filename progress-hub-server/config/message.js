@@ -3,13 +3,19 @@ module.exports = {
         USER_DB: {
             USER_CREATE_SUCCESS: 'ユーザーを作成しました。',
             USER_UPDATE_SUCCESS: 'ユーザー情報を更新しました。',
-            USER_DELETE_SUCCESS: 'ユーザーを削除しました。'
+            USER_DELETE_SUCCESS: 'ユーザーを削除しました。',
         },
     },
     ERRORS: {
+        ERROR: {
+            REQUEST_ERROR: 'リクエストの処理中にエラーが発生しました。',
+            FETCH_ERROR: 'リクエストの取得中にエラーが発生しました。',
+            PASSWORD_REQUIRED: 'パスワードは必須です。',
+        },
         USER_DB: {
             USER_NOT_FOUND: '指定されたユーザーが見つかりません。',
             QUERY_ERROR: '処理の実行中にエラーが発生しました。',
+            ENTRY_DUPLICATE: 'このユーザー名は既に使用されています。',
         },
         UPDATE_USER: {
             INVALID_FIELD_COUNT: '更新項目の数が不正です。',
