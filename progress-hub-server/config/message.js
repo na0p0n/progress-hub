@@ -7,6 +7,7 @@ module.exports = {
         },
         TODO_DB: {
             TODO_CREATE_SUCCESS: 'ToDoを作成しました。',
+            TODO_DELETE_SUCCESS: 'ToDoを削除しました。',
         },
     },
     ERRORS: {
@@ -29,6 +30,10 @@ module.exports = {
             TODO_NOT_FOUND: '指定されたToDoが見つかりません。',
         },
         CREATE_TODO: {
+            INVALID_FIELD_COUNT: 'カラムの数が不正です。',
+            FIELD_NOT_ALLOWED: 'カラム名が不正です。',
+        },
+        DELETE_TODO: {
             INVALID_FIELD_COUNT: 'カラムの数が不正です。',
             FIELD_NOT_ALLOWED: 'カラム名が不正です。',
         }
