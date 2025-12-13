@@ -7,6 +7,7 @@ module.exports = {
         },
         TODO_DB: {
             TODO_CREATE_SUCCESS: 'ToDoを作成しました。',
+            TODO_DELETE_SUCCESS: 'ToDoを削除しました。',
         },
     },
     ERRORS: {

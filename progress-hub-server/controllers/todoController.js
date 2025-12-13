@@ -13,6 +13,10 @@ const ALLOWED_FIELDS = [
     'progress_rate',
     'category_id'
 ];
+const DELETE_ALLOWED_FIELDS = [
+    'user_id',
+    'todo_id'
+];
 
 const queryPromise = util.promisify(connection.query).bind(connection);
 
@@ -100,7 +104,58 @@ exports.updateTodo = async (req, res) => {
 
 };
 exports.deleteTodo = async (req, res) => {
+    const deleteQuery = ```
+        DELETE
+            FROM
+                todos
+            WHERE
+                todo_id = ?
+            AND
+                user_id = ?
+    ```;
+
+    const user_id = req.body.user_id;
+    const todo_id = req.body.todo_id;
+    const incomingKeys = Object.keys(req.body);
+    const invalidKeys = lodash.difference(incomingKeys, DELETE_ALLOWED_FIELDS);
     
+    if (invalidKeys.length > 0) {
+        return res.status(400).json({
+            error: message.ERRORS.CREATE_TODO.FIELD_NOT_ALLOWED
+        });
+    }
+
+    if (incomingKeys.length !== DELETE_ALLOWED_FIELDS.length) {
+        return res.status(400).json({
+            error: message.ERRORS.CREATE_TODO.INVALID_FIELD_COUNT
+        });
+    }
+
+    const params = [
+        user_id,
+        todo_id
+    ];
+
+    try {
+        if (!await fetchUser(user_id)) {
+            return res.status(400).json({
+                error: message.ERRORS.USER_DB.USER_NOT_FOUND
+            })
+        }
+
+        const results = await queryPromise(deleteQuery, params);
+        
+        res.status(201).json({
+            message: message.SUCCESS.TODO_DB.TODO_DELETE_SUCCESS,
+            todoId: results.insertId
+        });
+    } catch (err) {
+        console.error(err);
+
+        return res.status(500).json({
+            error: message.ERRORS.ERROR.REQUEST_ERROR
+        });
+    }
 };
 
 async function fetchUser(user_id) {
