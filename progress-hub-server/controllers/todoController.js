@@ -41,10 +41,17 @@ exports.createTodo = async (req, res) => {
     const user_id = req.body.user_id;
     const incomingKeys = Object.keys(req.body);
 
-    if (!lodash.isEqual(lodash.countBy(ALLOWED_FIELDS), lodash.countBy(incomingKeys))) {
+    const invalidKeys = lodash.difference(incomingKeys, ALLOWED_FIELDS);
+    if (invalidKeys.length > 0) {
         return res.status(400).json({
             error: message.ERRORS.CREATE_TODO.FIELD_NOT_ALLOWED
-        })
+        });
+    }
+
+    if (incomingKeys.length !== ALLOWED_FIELDS.length) {
+        return res.status(400).json({
+            error: message.ERRORS.CREATE_TODO.INVALID_FIELD_COUNT
+        });
     }
 
     const {
